@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Exámenes Sagrada Familia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --primary: #2563eb; --bg: #f3f4f6; --font-main: 'Montserrat', sans-serif; }
+        body { font-family: var(--font-main); background: var(--bg); margin: 0; padding: 20px; color: #000; }
+        
+        /* --- ESTILOS DE PANTALLA --- */
+        .container { max-width: 900px; min-height: 1200px; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* Header Institucional */
+        header { border-bottom: 2px solid #000; margin-bottom: 15px; padding-bottom: 10px; display: flex; gap: 20px; align-items: center; }
+        .logo-img { width: 90px; height: 90px; object-fit: contain; }
+        .header-text { flex-grow: 1; text-align: center; }
+        .header-text h1 { font-size: 18px; font-weight: 700; margin: 0; line-height: 1.2; }
+        .header-text .motto { font-size: 11px; font-style: italic; margin: 2px 0 8px 0; font-weight: 500; }
+        .header-text h2 { font-size: 14px; font-weight: 600; margin: 0; text-transform: uppercase; }
+
+        /* Información */
+        .info-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 25px; width: 100%; }
+        .info-row { display: flex; gap: 20px; width: 100%; }
+        .info-field { display: flex; align-items: flex-end; }
+        .info-field label { font-weight: 700; font-size: 11px; margin-right: 5px; white-space: nowrap; padding-bottom: 2px;}
+        
+        .field-large { flex: 7; } 
+        .field-small { flex: 3; } 
+
+        .info-field input { width: 100%; border: none; border-bottom: 1px solid #000; background: transparent; font-size: 12px; outline: none; font-family: var(--font-main); height: 18px; }
+
+        /* Preguntas */
+        .question-list { counter-reset: question-counter; list-style: none; padding: 0; }
+        .question-item { border: 1px solid #e5e7eb; margin-bottom: 15px; padding: 15px; border-radius: 8px; background: #fff; position: relative; }
+        .question-number { font-weight: 700; margin-bottom: 5px; display: block; }
+        .question-item:not([data-type="image"]) .question-number::before { counter-increment: question-counter; content: counter(question-counter) ". "; }
+
+        .edit-input, textarea { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; margin-bottom: 5px; background: #fff; }
+        .option-row { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+        .option-letter { font-weight: 600; min-width: 20px; }
+
+        .img-preview { max-width: 100%; max-height: 400px; display: block; margin: 10px auto; }
+        .img-controls { background: #f0f9ff; padding: 10px; border-radius: 4px; border: 1px dashed #0284c7; text-align: center; }
+
+        /* --- CONTROLES --- */
+        .controls { 
+            position: sticky; top: 10px; background: #fff; padding: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 100; margin-bottom: 20px; 
+            border-radius: 8px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+        }
+        .control-group { display: flex; gap: 5px; align-items: center; border-right: 1px solid #ddd; padding-right: 10px; margin-right: 5px; }
+        button { padding: 8px 12px; cursor: pointer; border: none; border-radius: 4px; font-weight: 600; font-family: var(--font-main); font-size: 12px; transition: 0.2s; }
+        button:hover { opacity: 0.9; }
+        
+        .btn-add { background: var(--primary); color: white; }
+        .btn-print { background: #059669; color: white; }
+        .btn-save { background: #d97706; color: white; }
+        .btn-lang { background: #4f46e5; color: white; }
+        .btn-new { background: #0891b2; color: white; }
+        .btn-del-exam { background: #be123c; color: white; }
+        .btn-del { background: #dc2626; color: white; font-size: 11px; margin-top: 5px; }
+        .btn-upload { background: #6366f1; color: white; margin: 0 5px; }
+        .btn-link { background: #8b5cf6; color: white; margin: 0 5px; }
+        
+        select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; max-width: 150px; }
+
+        /* =========================================
+           IMPRESIÓN
+           ========================================= */
+        @media print {
+            @page { size: Legal; margin: 1.5cm 1.5cm 1.5cm 1.5cm; }
+            body { background: white; padding: 0; margin: 0; font-size: 10pt !important; -webkit-print-color-adjust: exact; }
+            .container { box-shadow: none; max-width: 100%; padding: 0; margin: 0; }
+            .controls, .btn-del, select, .no-print-label, .img-controls { display: none !important; }
+            .question-list { column-count: 2; column-gap: 30px; width: 100%; height: auto !important; display: block; }
+            .question-item { border: none; padding: 0; margin-bottom: 20px; page-break-inside: avoid; break-inside: avoid; }
+            textarea, .edit-input { border: none; padding: 0; margin: 0; resize: none; background: transparent; font-family: 'Montserrat', sans-serif; font-size: 10pt; line-height: 1.3; overflow: hidden; }
+            .option-row input[type="text"] { border-bottom: none; }
+            .reading-text { border: 1px solid #ccc; padding: 5px; font-size: 9pt; text-align: justify; }
+            .info-field input { border-bottom: 1px solid #000 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <div class="control-group">
+            <select id="examSelect" onchange="loadSelectedExam()"></select>
+            <button class="btn-new" onclick="createNewExam()" id="btn-new">➕ Nuevo</button>
+            <button class="btn-save" onclick="saveExam()" id="btn-save">💾 Guardar</button>
+            <button class="btn-del-exam" onclick="deleteCurrentExam()" id="btn-del-exam">🗑️ Eliminar</button>
+        </div>
+
+        <div class="control-group">
+            <button class="btn-lang" onclick="toggleLang()">🌐 ES/EN</button>
+            <button class="btn-print" onclick="window.print()">🖨️ Imprimir</button>
+        </div>
+
+        <button class="btn-add btn-q-multi" onclick="addQ('multiple')">+ Selección</button>
+        <button class="btn-add btn-q-read" onclick="addQ('reading')">+ Lectura</button>
+        <button class="btn-add btn-q-dev" onclick="addQ('dev')">+ Abierta</button>
+        <button class="btn-add btn-q-img" onclick="addQ('image')" style="background: #db2777;">+ Imagen</button>
+    </div>
+
+    <div class="container">
+        <header>
+            <img src="https://blogger.googleusercontent.com/img/a/AVvXsEgVEVyIp0mFTTIhcaIPduf4e-Mx-hTVySTbFBT-4jsrBEfNnCxqZHSaWUDJHjo5_wxYZxEDlSDrYHsHVesSoS8ajhZIUtkSqxEccS7VwBLwea46j9zedfTgGXoX-7_HZUI4Nw6-c8_p9hCL6P8ekTPInfYroWVHjl1_Cs1BUYnW2LvnLuzWPVMneO69-KW8" class="logo-img" alt="Escudo">
+            <div class="header-text">
+                <h1>COLEGIO DE LA SAGRADA FAMILIA</h1>
+                <p class="motto">"Acompañando con amor, educamos el corazón"</p>
+                <h2 id="examTitle" contenteditable="true">EVALUACIÓN DE PERIODO</h2>
+            </div>
+        </header>
+
+        <div class="info-container">
+            <div class="info-row">
+                <div class="info-field field-large">
+                    <label id="lbl-student">ESTUDIANTE:</label>
+                    <input type="text">
+                </div>
+                <div class="info-field field-small">
+                    <label id="lbl-date">FECHA:</label>
+                    <input type="text">
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-field field-large">
+                    <label id="lbl-teacher">DOCENTE:</label>
+                    <input type="text">
+                </div>
+                <div class="info-field field-small">
+                    <label id="lbl-grade">CURSO:</label>
+                    <input type="text">
+                </div>
+            </div>
+        </div>
+
+        <div id="qContainer" class="question-list"></div>
+    </div>
+
+    <script>
+        const container = document.getElementById('qContainer');
+        const examSelect = document.getElementById('examSelect');
+        const INDEX_KEY = 'exam_index_v2';
+        
+        let currentLang = 'es';
+        const t = {
+            es: {
+                student: "ESTUDIANTE:", date: "FECHA:", grade: "CURSO:", teacher: "DOCENTE:",
+                titleDefault: "EVALUACIÓN DE PERIODO",
+                ph_q: "Enunciado...", ph_opt: "Opción", ph_read: "Texto de lectura...", ph_subq: "Pregunta sobre el texto...",
+                lbl_print: "(Espacio respuesta al imprimir)",
+                btn_multi: "+ Selección", btn_read: "+ Lectura", btn_dev: "+ Abierta", btn_img: "+ Imagen",
+                alert_save: "Examen guardado: ", alert_del: "¿Seguro eliminar?",
+                prompt_new: "Escribe un nombre para este nuevo examen:", alert_exists: "Ya existe un examen con ese nombre.",
+                img_prompt_url: "Pega el enlace de la imagen:",
+                btn_upload: "📂 Subir Foto", btn_link: "🔗 Pegar URL"
+            },
+            en: {
+                student: "STUDENT:", date: "DATE:", grade: "GRADE:", teacher: "TEACHER:",
+                titleDefault: "TERM EXAM",
+                ph_q: "Question text...", ph_opt: "Option", ph_read: "Reading text...", ph_subq: "Question about text...",
+                lbl_print: "(Answer space when printing)",
+                btn_multi: "+ Multiple Choice", btn_read: "+ Reading", btn_dev: "+ Open Question", btn_img: "+ Image",
+                alert_save: "Exam saved: ", alert_del: "Confirm delete?",
+                prompt_new: "Enter name for this new exam:", alert_exists: "Already exists.",
+                img_prompt_url: "Paste image URL:",
+                btn_upload: "📂 Upload File", btn_link: "🔗 Paste URL"
+            }
+        };
+
+        // --- GESTIÓN DE EXÁMENES ---
+
+        function getExamList() {
+            const list = localStorage.getItem(INDEX_KEY);
+            return list ? JSON.parse(list) : [];
+        }
+
+        function updateExamSelect(selectedName = null) {
+            const list = getExamList();
+            examSelect.innerHTML = '';
+            
+            // Opción vacía por defecto para permitir "modo borrador"
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = "";
+            defaultOpt.text = list.length === 0 ? "(Sin exámenes - Escribe y Guarda)" : "(Seleccionar o Crear Nuevo)";
+            examSelect.add(defaultOpt);
+
+            list.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.text = name;
+                examSelect.add(opt);
+            });
+
+            if (selectedName && list.includes(selectedName)) {
+                examSelect.value = selectedName;
+            }
+        }
+
+        function createNewExam() {
+            // Esta función ahora es para limpiar explícitamente y empezar de cero
+            if(confirm("¿Deseas limpiar la pantalla para crear un examen nuevo?")) {
+                examSelect.value = "";
+                container.innerHTML = '';
+                document.getElementById('examTitle').innerText = t[currentLang].titleDefault;
+                document.querySelectorAll('.info-field input').forEach(i => i.value = '');
+                // No pedimos nombre aún, se pedirá al Guardar
+            }
+        }
+
+        function saveExam() {
+            let name = examSelect.value;
+            const lang = t[currentLang];
+
+            // SI NO HAY EXAMEN SELECCIONADO (Es un nuevo ingreso)
+            if (!name) {
+                name = prompt(lang.prompt_new);
+                if (!name) return; // Cancelado por usuario
+
+                const list = getExamList();
+                if (list.includes(name)) {
+                    alert(lang.alert_exists);
+                    return;
+                }
+
+                // Crear entrada en la lista
+                list.push(name);
+                localStorage.setItem(INDEX_KEY, JSON.stringify(list));
+                
+                // Actualizar el select y seleccionarlo
+                updateExamSelect(name);
+            }
+
+            // Guardar datos
+            saveExamData(name);
+            alert(lang.alert_save + name);
+        }
+
+        function deleteCurrentExam() {
+            const name = examSelect.value;
+            if (!name) return;
+            
+            if (confirm(t[currentLang].alert_del)) {
+                localStorage.removeItem('EXAM_' + name);
+                let list = getExamList();
+                list = list.filter(item => item !== name);
+                localStorage.setItem(INDEX_KEY, JSON.stringify(list));
+                updateExamSelect();
+                container.innerHTML = ''; // Limpiar al borrar
+            }
+        }
+
+        function saveExamData(name) {
+            const data = [];
+            document.querySelectorAll('.question-item').forEach(item => {
+                const type = item.dataset.type;
+                let qData = { type };
+                
+                if (type === 'image') {
+                    qData.src = item.querySelector('img').src;
+                } else {
+                    qData.text = item.querySelector('.q-text')?.value || '';
+                    if (type === 'multiple') qData.options = Array.from(item.querySelectorAll('.option-row input')).map(i => i.value);
+                    else if (type === 'reading') qData.reading = item.querySelector('.q-reading').value;
+                }
+                data.push(qData);
+            });
+            
+            const infoInputs = Array.from(document.querySelectorAll('.info-field input')).map(i => i.value);
+            const titleText = document.getElementById('examTitle').innerText;
+            const fullData = { questions: data, title: titleText, info: infoInputs, lang: currentLang };
+            
+            localStorage.setItem('EXAM_' + name, JSON.stringify(fullData));
+        }
+
+        function loadSelectedExam() {
+            const name = examSelect.value;
+            // Si selecciona la opción vacía, no borramos, dejamos lo que esté (útil si se equivocó al cambiar)
+            // O podríamos limpiar. Por seguridad, si cambia a "vacío" no hacemos nada, solo si cambia a un examen real cargamos.
+            if (!name) return;
+
+            const saved = JSON.parse(localStorage.getItem('EXAM_' + name));
+            container.innerHTML = '';
+
+            if (saved) {
+                if(saved.lang) { currentLang = saved.lang; applyLang(); }
+                if(saved.title) document.getElementById('examTitle').innerText = saved.title;
+                if(saved.questions) saved.questions.forEach(q => addQ(q.type, q));
+                if(saved.info) {
+                    const inputs = document.querySelectorAll('.info-field input');
+                    saved.info.forEach((val, i) => { if(inputs[i]) inputs[i].value = val; });
+                }
+            } else { applyLang(); }
+        }
+
+        // --- SISTEMA DE IDIOMA Y RECURSOS ---
+        function toggleLang() { currentLang = currentLang === 'es' ? 'en' : 'es'; applyLang(); }
+
+        function applyLang() {
+            const lang = t[currentLang];
+            document.getElementById('lbl-student').innerText = lang.student;
+            document.getElementById('lbl-date').innerText = lang.date;
+            document.getElementById('lbl-grade').innerText = lang.grade;
+            document.getElementById('lbl-teacher').innerText = lang.teacher;
+
+            document.querySelector('.btn-q-multi').innerText = lang.btn_multi;
+            document.querySelector('.btn-q-read').innerText = lang.btn_read;
+            document.querySelector('.btn-q-dev').innerText = lang.btn_dev;
+            document.querySelector('.btn-q-img').innerText = lang.btn_img;
+            
+            document.querySelectorAll('.btn-upload').forEach(b => b.innerText = lang.btn_upload);
+            document.querySelectorAll('.btn-link').forEach(b => b.innerText = lang.btn_link);
+        }
+
+        function handleImageUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = input.closest('.question-item').querySelector('img');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function handleImageURL(btn) {
+            const url = prompt(t[currentLang].img_prompt_url);
+            if(url) {
+                const img = btn.closest('.question-item').querySelector('img');
+                img.src = url;
+                img.style.display = 'block';
+            }
+        }
+
+        function addQ(type, content = null) {
+            const div = document.createElement('div');
+            div.className = 'question-item';
+            div.dataset.type = type;
+            const lang = t[currentLang];
+            
+            let html = `<span class="question-number"></span>`;
+            
+            if (type === 'multiple') {
+                html += `<textarea class="q-text" rows="1" placeholder="${lang.ph_q}"></textarea>
+                    <div class="options-container">
+                        ${['A','B','C','D'].map(l => `<div class="option-row"><span class="option-letter">${l})</span><input type="text" class="edit-input" placeholder="${lang.ph_opt} ${l}"></div>`).join('')}
+                    </div>`;
+            } else if (type === 'reading') {
+                html += `<label class="no-print-label">Texto:</label>
+                    <textarea class="q-reading reading-text" rows="5" placeholder="${lang.ph_read}"></textarea>
+                    <textarea class="q-text" rows="2" placeholder="${lang.ph_subq}" style="margin-top:5px; font-weight:700;"></textarea>
+                    <div style="margin-top:5px; border-top:1px dashed #ccc;"><span class="no-print-label" style="font-size:10px; color:blue;">${lang.lbl_print}</span><div style="height:30px;"></div></div>`;
+            } else if (type === 'dev') {
+                html += `<textarea class="q-text" rows="1" placeholder="${lang.ph_q}"></textarea>
+                    <div class="lines-area"><div style="border-bottom:1px solid black; margin-top:18px;"></div><div style="border-bottom:1px solid black; margin-top:18px;"></div><div style="border-bottom:1px solid black; margin-top:18px;"></div></div>`;
+            } else if (type === 'image') {
+                html += `<div class="img-controls">
+                        <input type="file" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
+                        <button class="btn-upload" onclick="this.previousElementSibling.click()">${lang.btn_upload}</button>
+                        <button class="btn-link" onclick="handleImageURL(this)">${lang.btn_link}</button>
+                    </div>
+                    <img src="" class="img-preview" style="display:none;">`;
+            }
+
+            html += `<button class="btn-del" onclick="this.parentElement.remove()">X</button>`;
+            div.innerHTML = html;
+            container.appendChild(div);
+
+            if (content) {
+                if(type === 'image' && content.src) { const img = div.querySelector('img'); img.src = content.src; img.style.display = 'block'; }
+                if(content.text) { div.querySelector('.q-text').value = content.text; autoResize(div.querySelector('.q-text')); }
+                if(content.reading) { div.querySelector('.q-reading').value = content.reading; autoResize(div.querySelector('.q-reading')); }
+                if(content.options) { const inputs = div.querySelectorAll('.option-row input'); content.options.forEach((val, i) => inputs[i].value = val); }
+            }
+        }
+
+        document.addEventListener('input', (e) => { if (e.target.tagName === 'TEXTAREA') autoResize(e.target); });
+        function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+
+        window.onload = function() { updateExamSelect(); };
+    </script>
+</body>
+</html>
