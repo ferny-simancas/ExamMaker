@@ -76,7 +76,7 @@
         
         .question-number { font-weight: 700; margin-bottom: 5px; display: block; }
         
-        /* MODIFICACIÓN: No numerar Imagen, Texto Libre NI Lectura */
+        /* No numerar Imagen, Texto Libre NI Lectura */
         .question-item:not([data-type="image"]):not([data-type="free_text"]):not([data-type="reading"]) .question-number::before { 
             counter-increment: question-counter; 
             content: counter(question-counter) ". "; 
@@ -128,7 +128,7 @@
                 background-color: white !important;
                 border: 3px solid var(--header-color) !important;
                 -webkit-print-color-adjust: exact; 
-                border-radius: 0; /* Cuadrado al imprimir */
+                border-radius: 0; 
             }
 
             .question-list { column-count: 2; column-gap: 30px; width: 100%; display: block; column-fill: auto; height: auto; }
@@ -178,7 +178,7 @@
             </div>
             
             <div class="header-right">
-                <img id="icontecLogo" src="https://pensionesdeantioquia.gov.co/wp-content/uploads/2023/08/logos-icontec.jpg" class="icontec-img" alt="Icontec Logo">
+                <img id="icontecLogo" src="https://barranquilla.gov.co/wp-content/uploads/2020/11/ico-cert-procesos.png" class="icontec-img" alt="Certificación Icontec">
             </div>
         </header>
 
@@ -219,7 +219,7 @@
                 student: "ESTUDIANTE:", date: "FECHA:", grade: "CURSO:", teacher: "DOCENTE:",
                 titleDefault: "EVALUACIÓN DE PERIODO",
                 ph_q: "Enunciado...", ph_opt: "Opción", ph_read: "Texto de lectura...", 
-                ph_subq: "Responda las siguientes preguntas de acuerdo con el texto:", /* MODIFICADO */
+                ph_subq: "Responda las siguientes preguntas de acuerdo con el texto:",
                 ph_free: "Escribe aquí instrucciones, párrafos o texto libre...",
                 lbl_print: "(Espacio respuesta al imprimir)",
                 btn_multi: "+ Selección", btn_read: "+ Lectura", btn_dev: "+ Abierta", btn_img: "+ Imagen", btn_text: "+ Texto",
@@ -232,7 +232,7 @@
                 student: "STUDENT:", date: "DATE:", grade: "GRADE:", teacher: "TEACHER:",
                 titleDefault: "TERM EXAM",
                 ph_q: "Question text...", ph_opt: "Option", ph_read: "Reading text...", 
-                ph_subq: "Answer the following questions based on the text:", /* MODIFICADO */
+                ph_subq: "Answer the following questions based on the text:",
                 ph_free: "Write instructions, paragraphs or free text here...",
                 lbl_print: "(Answer space when printing)",
                 btn_multi: "+ Multiple Choice", btn_read: "+ Reading", btn_dev: "+ Open Question", btn_img: "+ Image", btn_text: "+ Text",
@@ -362,8 +362,6 @@
             document.querySelectorAll('.btn-upload').forEach(b => b.innerText = lang.btn_upload);
             document.querySelectorAll('.btn-link').forEach(b => b.innerText = lang.btn_link);
             document.querySelectorAll('.question-item[data-type="free_text"] .q-text').forEach(tx => { tx.placeholder = lang.ph_free; });
-            
-            // Actualizar placeholders de lectura dinámicamente si existen
             document.querySelectorAll('.question-item[data-type="reading"] .q-text').forEach(tx => { tx.placeholder = lang.ph_subq; });
             document.querySelectorAll('.question-item[data-type="reading"] .q-reading').forEach(tx => { tx.placeholder = lang.ph_read; });
         }
